@@ -1,5 +1,3 @@
 package com.acme.commitviewer.model
 
-import java.util.Date
-
-case class Commit(ref: String, author: String, date: Date, description: String)
+case class Commit(ref: String, authorName: String, authorEmail: String, date: String, subject: String)

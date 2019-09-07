@@ -8,5 +8,12 @@ ThisBuild / organizationName := "acme"
 lazy val root = (project in file("."))
   .settings(
     name := "commits_viewer",
-    libraryDependencies += scalaTest % Test
+    libraryDependencies ++= Seq(
+      scalaTest,
+      scalaMock,
+      logback,
+      typesafeConfig,
+      typesafeLogging,
+      json4s
+    )
   )
