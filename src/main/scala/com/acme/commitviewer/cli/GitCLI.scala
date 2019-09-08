@@ -4,6 +4,7 @@ import java.net.URL
 
 import com.acme.commitviewer.model.Commit
 import com.acme.commitviewer.util.{Error, Json4s, Logging}
+import com.acme.commitviewer.util.LocalRepo._
 
 import scala.reflect.io.Directory
 
@@ -55,11 +56,4 @@ object GitCLI {
   val CommitFormat = """{ "ref":"%H","author_name":"%an","author_email":"%ae","date":"%at","subject":"%s" }"""
 
   def apply(implicit cli: CLI): GitCLI = new GitCLI
-
-  val canCloneTo: Directory => Boolean = (dir: Directory) => !dir.exists || dir.isEmpty
-
-  val existsCachedRepo: Directory => Boolean = (dir: Directory) => {
-    val gitDir = dir / Directory(".git")
-    dir.exists && gitDir.exists
-  }
 }
