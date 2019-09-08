@@ -1,4 +1,4 @@
-package com.acme.commitviewer.git
+package com.acme.commitviewer.cli
 
 import com.acme.commitviewer.util.{Error, Logging}
 

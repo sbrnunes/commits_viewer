@@ -1,4 +1,4 @@
-package com.acme.commitviewer.git
+package com.acme.commitviewer.cli
 
 import org.scalatest.FlatSpec
 

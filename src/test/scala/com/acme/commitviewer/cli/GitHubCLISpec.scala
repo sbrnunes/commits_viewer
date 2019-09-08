@@ -1,4 +1,4 @@
-package com.acme.commitviewer.git
+package com.acme.commitviewer.cli
 
 import java.io.File
 import java.net.URL

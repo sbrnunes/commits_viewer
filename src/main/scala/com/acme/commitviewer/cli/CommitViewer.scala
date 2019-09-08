@@ -1,9 +1,8 @@
-package com.acme.commitviewer
+package com.acme.commitviewer.cli
 
 import java.net.URL
 
 import com.acme.commitviewer.config.Settings
-import com.acme.commitviewer.git.{CLI, GitCLI, GitHubCLI}
 import com.acme.commitviewer.util.Logging
 
 import scala.reflect.io.Directory
@@ -39,7 +38,9 @@ object CommitViewer extends App with Logging {
 
     sys.addShutdownHook {
       // Cleaning up resources left by this exercise.
-//      cleanCachedRepos(settings.cachedReposRoot)
+      if(settings.cleanResourcesOnShutdown) {
+        cleanCachedRepos(settings.cachedReposRoot)
+      }
     }
   }
 }
