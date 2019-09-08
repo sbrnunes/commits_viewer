@@ -6,11 +6,13 @@ import java.net.URL
 import com.acme.commitviewer.model.Commit
 import com.acme.commitviewer.util.{Logging, MD5}
 
+import scala.reflect.io.Directory
+
 trait GitHubClient {
   def listCommits(limit: Int): Either[Throwable, List[Commit]]
 }
 
-class GitHubCLI(repo: URL, cachedRepo: File)(implicit git: GitCLI) extends GitHubClient with Logging {
+class GitHubCLI(repo: URL, cachedRepo: Directory)(implicit git: GitCLI) extends GitHubClient with Logging {
 
   def listCommits(limit: Int): Either[Throwable, List[Commit]] = {
     for {
@@ -22,8 +24,8 @@ class GitHubCLI(repo: URL, cachedRepo: File)(implicit git: GitCLI) extends GitHu
 }
 
 object GitHubCLI {
-  def apply(repo: URL, cachedRepos: File)(implicit git: GitCLI): GitHubClient = {
-    val cachedRepo: File = new File(cachedRepos, MD5.digest(repo.toString))
+  def apply(repo: URL, cachedRepos: Directory)(implicit git: GitCLI): GitHubClient = {
+    val cachedRepo = cachedRepos / Directory(MD5.digest(repo.toString))
     new GitHubCLI(repo, cachedRepo)
   }
 }

@@ -9,12 +9,14 @@ import com.acme.commitviewer.util.MD5
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{FunSpecLike, Matchers}
 
+import scala.reflect.io.Directory
+
 class GitHubCLISpec extends FunSpecLike with MockFactory with Matchers {
 
   describe("listCommits") {
     val repo = new URL("http://some.repo.test/repo")
-    val cachedReposRoot = new File(".")
-    val cachedRepo = new File(cachedReposRoot, MD5.digest(repo.toString))
+    val cachedReposRoot = Directory("cached_repos")
+    val cachedRepo = cachedReposRoot / Directory(MD5.digest(repo.toString))
     val limit = 10
 
     it("should use the Git CLI to setup the cached repo and fetch the list of commits") {

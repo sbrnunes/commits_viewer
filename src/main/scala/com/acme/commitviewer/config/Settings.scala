@@ -4,8 +4,10 @@ import java.io.File
 
 import com.typesafe.config.{Config, ConfigFactory}
 
+import scala.reflect.io.Directory
+
 class Settings(config: Config) {
-  val cachedReposRoot: File = new File(config.getString("git.cached_repos.dir"))
+  val cachedReposRoot: Directory = Directory(new File(config.getString("git.cached_repos.dir")))
   val commitsDefaultLimit: Int = config.getInt("git.commits.list.default_limit")
 }
 

@@ -1,6 +1,5 @@
 package com.acme.commitviewer
 
-import java.io.File
 import java.net.URL
 
 import com.acme.commitviewer.config.Settings
@@ -12,11 +11,10 @@ import scala.util.Try
 
 object CommitViewer extends App with Logging {
 
-  def cleanCachedRepos(file: File): Unit = {
-    if(file.exists()) {
-      logger.info(s"Deleting ${file.getAbsolutePath}")
-      val directory = new Directory(file)
-      directory.deleteRecursively()
+  def cleanCachedRepos(dir: Directory): Unit = {
+    if(dir.exists) {
+      logger.info(s"Deleting ${dir.path}")
+      dir.deleteRecursively()
     }
   }
 
@@ -26,9 +24,8 @@ object CommitViewer extends App with Logging {
 
     implicit val cli = CLI
     implicit val git = GitCLI(cli)
-    val settings = Settings()
 
-    cleanCachedRepos(settings.cachedReposRoot)
+    val settings = Settings()
 
     //TODO: extracts args in a more reliable way and handle failures
     val repositoryUrl: URL = new URL(args(0))
@@ -42,7 +39,7 @@ object CommitViewer extends App with Logging {
 
     sys.addShutdownHook {
       // Cleaning up resources left by this exercise.
-      cleanCachedRepos(settings.cachedReposRoot)
+//      cleanCachedRepos(settings.cachedReposRoot)
     }
   }
 }
