@@ -37,14 +37,14 @@ class GitCLI(implicit cli: CLI) extends Logging {
     }
   }
 
-  def log(repo: URL, cachedRepo: Directory, limit: Int): Either[Error, List[Commit]] = {
+  def log(repo: URL, cachedRepo: Directory, limit: Int, offset: Int): Either[Error, List[Commit]] = {
     if(!existsCachedRepo(cachedRepo)) {
       Left(Error(s"Directory ${cachedRepo.path} is not a valid Git repo."))
     } else {
       logger.info(s"Listing commits for: ${cachedRepo.path}")
       cli.exec(
         s"cd ${cachedRepo.path}",
-        s"""git log -n $limit --pretty=format:'${GitCLI.CommitFormat}'"""
+        s"""git log --max-count=$limit --skip=$offset --pretty=format:'${GitCLI.CommitFormat}'"""
       ) map { output =>
         output.map(Json4s.fromJson[Commit])
       }
@@ -53,6 +53,7 @@ class GitCLI(implicit cli: CLI) extends Logging {
 }
 
 object GitCLI {
+  //TODO: breaks if the subject contains quotes, need to find a workaround
   val CommitFormat = """{ "ref":"%H","author_name":"%an","author_email":"%ae","date":"%at","subject":"%s" }"""
 
   def apply(implicit cli: CLI): GitCLI = new GitCLI

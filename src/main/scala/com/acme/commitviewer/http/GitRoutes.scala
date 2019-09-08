@@ -23,23 +23,23 @@ object GitRoutes {
     implicit val ec: ExecutionContext = system.dispatcher
     path("commits") {
       get {
-        parameters("repository_url".as[String], "limit" ? settings.commitsDefaultLimit) { (repositoryUrl, limit) =>
-          //TODO: validate URL, return 400 - Bad Request if not valid
-          onComplete {
-            Future {
-              blocking(client.listCommits(new URL(repositoryUrl), limit))
-            } withTimeout(settings.requestDefaultTimeout)
-          } {
-            case Success(Right(commits)) =>
-              complete(StatusCodes.OK -> commits)
-            case Success(Left(error)) =>
-              complete(StatusCodes.InternalServerError -> error)
-            case Failure(ex: TimeoutException) =>
-              complete(StatusCodes.RequestTimeout -> SimpleMessage(
-                "Request is taking too long to complete. Please try again in a few moments."))
-            case Failure(ex: Throwable) =>
-              failWith(ex)
-          }
+        parameters("repository_url".as[String], "limit" ? settings.commitsDefaultLimit, "offset" ? 0) {
+          (repositoryUrl, limit, offset) =>
+            onComplete {
+              Future {
+                blocking(client.listCommits(new URL(repositoryUrl), limit, offset))
+              } withTimeout (settings.requestDefaultTimeout)
+            } {
+              case Success(Right(page)) =>
+                complete(StatusCodes.OK -> page)
+              case Success(Left(error)) =>
+                complete(StatusCodes.InternalServerError -> error)
+              case Failure(ex: TimeoutException) =>
+                complete(StatusCodes.RequestTimeout -> SimpleMessage(
+                  "Request is taking too long to complete. Please try again in a few moments."))
+              case Failure(ex: Throwable) =>
+                failWith(ex)
+            }
         }
       }
     }

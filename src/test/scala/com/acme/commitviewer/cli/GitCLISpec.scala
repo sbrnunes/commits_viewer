@@ -49,8 +49,6 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
       val git = new GitCLI
       git.clone(repo, cachedRepo) should equal(Left(expected))
     }
-
-    //TODO: ADD TEST FOR EXCEPTIONS
   }
 
   describe("pull") {
@@ -106,6 +104,7 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
 
   describe("log") {
     val limit = 10
+    val offset = 0
     val now = Instant.now.toEpochMilli.toString
 
     it("should use the CLI to fetch the commits from the given repository") {
@@ -118,11 +117,11 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
       (cli.exec _ )
         .expects(Seq(
           s"cd ${cachedRepo.path}",
-          s"""git log -n $limit --pretty=format:'${GitCLI.CommitFormat}'"""))
+          s"""git log --max-count=$limit --skip=$offset --pretty=format:'${GitCLI.CommitFormat}'"""))
         .returning(Right(List(s"""{ "ref":"${expected.ref}","author_name":"${expected.authorName}","author_email":"${expected.authorEmail}","date":"$now","subject":"${expected.subject}" }""")))
 
       val git = new GitCLI
-      git.log(repo, cachedRepo, limit) should equal(Right(List(expected)))
+      git.log(repo, cachedRepo, limit, offset) should equal(Right(List(expected)))
     }
 
     it("should fail when the cached repo does not exist") {
@@ -131,10 +130,10 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
       implicit val cli: CLI = mock[CLI]
       (cli.exec _ ).expects(Seq(
         s"cd ${cachedRepo.path}",
-        s"""git log -n $limit --pretty=format:'${GitCLI.CommitFormat}'""")).never()
+        s"""git log --max-count=$limit --skip=$offset --pretty=format:'${GitCLI.CommitFormat}'""")).never()
 
       val git = new GitCLI
-      git.log(repo, cachedRepo, limit) should equal(expected)
+      git.log(repo, cachedRepo, limit, offset) should equal(expected)
     }
 
     it("should fail when the cached repo is empty") {
@@ -144,10 +143,10 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
       implicit val cli: CLI = mock[CLI]
       (cli.exec _ ).expects(Seq(
         s"cd ${cachedRepo.path}",
-        s"""git log -n $limit --pretty=format:'${GitCLI.CommitFormat}'""")).never()
+        s"""git log --max-count=$limit --skip=$offset --pretty=format:'${GitCLI.CommitFormat}'""")).never()
 
       val git = new GitCLI
-      git.log(repo, cachedRepo, limit) should equal(expected)
+      git.log(repo, cachedRepo, limit, offset) should equal(expected)
     }
 
     it("should propagate any errors from the CLI") {
@@ -159,13 +158,11 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
       (cli.exec _ )
         .expects(Seq(
           s"cd ${cachedRepo.path}",
-          s"""git log -n $limit --pretty=format:'${GitCLI.CommitFormat}'"""))
+          s"""git log --max-count=$limit --skip=$offset --pretty=format:'${GitCLI.CommitFormat}'"""))
         .returning(Left(expected))
 
       val git = new GitCLI
-      git.log(repo, cachedRepo, limit) should equal(Left(expected))
+      git.log(repo, cachedRepo, limit, offset) should equal(Left(expected))
     }
-
-    //TODO: ADD TEST FOR EXCEPTIONS
   }
 }
