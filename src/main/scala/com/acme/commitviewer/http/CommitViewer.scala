@@ -1,5 +1,7 @@
 package com.acme.commitviewer.http
 
+import java.net.URL
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.javadsl.server.RouteResult
@@ -8,10 +10,9 @@ import akka.http.scaladsl.model.HttpRequest
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.RouteResult.{Complete, Rejected}
-import akka.http.scaladsl.server.directives.DebuggingDirectives._
-import akka.http.scaladsl.server.directives.{DebuggingDirectives, LoggingMagnet}
+import akka.http.scaladsl.server.directives.LoggingMagnet
 import akka.stream.ActorMaterializer
-import com.acme.commitviewer.cli.{CLI, GitCLI}
+import com.acme.commitviewer.cli.{CLI, GitCLI, GitHubCLI, GitHubClient}
 import com.acme.commitviewer.config.Settings
 import com.acme.commitviewer.util.Logging
 
@@ -22,9 +23,10 @@ object CommitViewer extends App with Logging{
   implicit val system: ActorSystem = ActorSystem("commit_viewer")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+  implicit val settings: Settings = Settings()
   implicit val cli: CLI.type = CLI
   implicit val git: GitCLI = GitCLI(cli)
-  implicit val settings: Settings = Settings()
+  implicit val client: GitHubClient = GitHubCLI(settings.cachedReposRoot)
 
   def accessLogger(logger: LoggingAdapter)(request: HttpRequest)(result: RouteResult): Unit = {
     result match {
@@ -36,7 +38,8 @@ object CommitViewer extends App with Logging{
   }
 
   val routes: Seq[Route] = Seq(
-    DiagnosticRoutes()
+    DiagnosticRoutes(),
+    GitRoutes()
   ) map { route =>
     logRequestResult(LoggingMagnet(accessLogger))(route)
   }

@@ -16,6 +16,8 @@ lazy val root = (project in file("."))
       typesafeLogging,
       json4s,
       akkaHttp,
+      akkaHttpTestKit,
+      akkaTestKit,
       akkaStream,
       akkaHttpJson4s
     )
