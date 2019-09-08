@@ -4,23 +4,21 @@ import java.net.URL
 import java.time.Instant
 
 import com.acme.commitviewer.model.Commit
-import com.acme.commitviewer.util.MD5
+import com.acme.commitviewer.util.{Error, MD5}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterEach, FunSpecLike, Matchers}
 
 import scala.reflect.io.Directory
 
 class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeAndAfterEach {
-  val repo = new URL("http://some.repo.test/repo")
-  val cachedReposRoot = Directory("cached_repos")
-  val cachedRepo = cachedReposRoot / Directory(MD5.digest(repo.toString))
-  val cachedRepoGit = cachedReposRoot / Directory(MD5.digest(repo.toString)) / Directory(".git")
+  val repo: URL = new URL("http://some.repo.test/repo")
+  val cachedReposRoot: Directory = Directory("target/cached_repos")
+  val cachedRepo: Directory = cachedReposRoot / Directory(MD5.digest(repo.toString))
+  val cachedRepoGit: Directory = cachedReposRoot / Directory(MD5.digest(repo.toString)) / Directory(".git")
 
   override protected def beforeEach(): Unit = {
     super.beforeEach()
-//    cachedReposRoot.createDirectory()
-//    cachedRepo.createDirectory()
-    cachedRepoGit.createDirectory()
+    cachedReposRoot.createDirectory()
   }
 
   override protected def afterEach(): Unit = {
@@ -31,7 +29,7 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
   describe("clone") {
 
     it("should use the CLI to clone the given repository") {
-      implicit val cli = mock[CLI]
+      implicit val cli: CLI = mock[CLI]
       (cli.exec _ )
         .expects(Seq(s"git clone ${repo.toString} ${cachedRepo.path}"))
         .returning(Right(List.empty))
@@ -41,9 +39,9 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
     }
 
     it("should propagate any errors from the CLI") {
-      val expected = new Exception("Some error")
+      val expected = Error("Some error")
 
-      implicit val cli = mock[CLI]
+      implicit val cli: CLI = mock[CLI]
       (cli.exec _ )
         .expects(Seq(s"git clone ${repo.toString} ${cachedRepo.path}"))
         .returning(Left(expected))
@@ -58,7 +56,10 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
   describe("pull") {
 
     it("should use the CLI to update the given repository") {
-      implicit val cli = mock[CLI]
+      cachedRepo.createDirectory()
+      cachedRepoGit.createDirectory()
+
+      implicit val cli: CLI = mock[CLI]
       (cli.exec _ )
         .expects(Seq(s"cd ${cachedRepo.path}", "git pull"))
         .returning(Right(List.empty))
@@ -68,19 +69,30 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
     }
 
     it("should fail when the cached repo does not exist") {
-      implicit val cli = mock[CLI]
-      (cli.exec _ )
-        .expects(Seq(s"cd ${cachedRepo.path}", "git pull"))
-        .returning(Right(List.empty))
+      val expected = Left(Error(s"Directory ${cachedRepo.path} is not a valid Git repo."))
 
+      implicit val cli: CLI = mock[CLI]
+      (cli.exec _ ).expects(Seq(s"cd ${cachedRepo.path}", "git pull")).never()
       val git = new GitCLI
-      git.pull(repo, cachedRepo) should equal(Left())
+      git.pull(repo, cachedRepo) should equal(expected)
+    }
+
+    it("should fail when the cached repo is empty") {
+      cachedRepo.createDirectory()
+      val expected = Left(Error(s"Directory ${cachedRepo.path} is not a valid Git repo."))
+
+      implicit val cli: CLI = mock[CLI]
+      (cli.exec _ ).expects(Seq(s"cd ${cachedRepo.path}", "git pull")).never()
+      val git = new GitCLI
+      git.pull(repo, cachedRepo) should equal(expected)
     }
 
     it("should propagate any errors from the CLI") {
-      val expected = new Exception("Some error")
+      cachedRepo.createDirectory()
+      cachedRepoGit.createDirectory()
+      val expected = Error("Some error")
 
-      implicit val cli = mock[CLI]
+      implicit val cli: CLI = mock[CLI]
       (cli.exec _ )
         .expects(Seq(s"cd ${cachedRepo.path}", "git pull"))
         .returning(Left(expected))
@@ -97,6 +109,9 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
     val now = Instant.now.toEpochMilli.toString
 
     it("should use the CLI to fetch the commits from the given repository") {
+      cachedRepo.createDirectory()
+      cachedRepoGit.createDirectory()
+
       val expected = Commit("ref", "name", "email", now, "subject")
 
       implicit val cli = mock[CLI]
@@ -110,10 +125,37 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
       git.log(repo, cachedRepo, limit) should equal(Right(List(expected)))
     }
 
-    it("should propagate any errors from the CLI") {
-      val expected = new Exception("Some error")
+    it("should fail when the cached repo does not exist") {
+      val expected = Left(Error(s"Directory ${cachedRepo.path} is not a valid Git repo."))
 
-      implicit val cli = mock[CLI]
+      implicit val cli: CLI = mock[CLI]
+      (cli.exec _ ).expects(Seq(
+        s"cd ${cachedRepo.path}",
+        s"""git log -n $limit --pretty=format:'${GitCLI.CommitFormat}'""")).never()
+
+      val git = new GitCLI
+      git.log(repo, cachedRepo, limit) should equal(expected)
+    }
+
+    it("should fail when the cached repo is empty") {
+      cachedRepo.createDirectory()
+      val expected = Left(Error(s"Directory ${cachedRepo.path} is not a valid Git repo."))
+
+      implicit val cli: CLI = mock[CLI]
+      (cli.exec _ ).expects(Seq(
+        s"cd ${cachedRepo.path}",
+        s"""git log -n $limit --pretty=format:'${GitCLI.CommitFormat}'""")).never()
+
+      val git = new GitCLI
+      git.log(repo, cachedRepo, limit) should equal(expected)
+    }
+
+    it("should propagate any errors from the CLI") {
+      cachedRepo.createDirectory()
+      cachedRepoGit.createDirectory()
+      val expected = Error("Some error")
+
+      implicit val cli: CLI = mock[CLI]
       (cli.exec _ )
         .expects(Seq(
           s"cd ${cachedRepo.path}",

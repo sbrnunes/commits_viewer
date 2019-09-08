@@ -5,7 +5,7 @@ import java.net.URL
 import java.time.Instant
 
 import com.acme.commitviewer.model.Commit
-import com.acme.commitviewer.util.MD5
+import com.acme.commitviewer.util.{Error, MD5}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{FunSpecLike, Matchers}
 
@@ -32,9 +32,9 @@ class GitHubCLISpec extends FunSpecLike with MockFactory with Matchers {
     }
 
     it("should fail if the repo could not be cloned") {
-      val expected = Left(new Exception("Some error"))
+      val expected = Left(Error("Some error"))
 
-      implicit val git = mock[GitCLI]
+      implicit val git: GitCLI = mock[GitCLI]
       (git.clone _ ).expects(repo, cachedRepo).returning(expected)
       (git.pull _ ).expects(*, *).never()
       (git.log _ ).expects(*, *, *).never()
@@ -44,9 +44,9 @@ class GitHubCLISpec extends FunSpecLike with MockFactory with Matchers {
     }
 
     it("should fail if the repo could not be updated") {
-      val expected = Left(new Exception("Some error"))
+      val expected = Left(Error("Some error"))
 
-      implicit val git = mock[GitCLI]
+      implicit val git: GitCLI = mock[GitCLI]
       (git.clone _ ).expects(repo, cachedRepo).returning(Right(true))
       (git.pull _ ).expects(repo, cachedRepo).returning(expected)
       (git.log _ ).expects(*, *, *).never()
@@ -56,9 +56,9 @@ class GitHubCLISpec extends FunSpecLike with MockFactory with Matchers {
     }
 
     it("should fail if the list of commits could not be retrieved") {
-      val expected = Left(new Exception("Some error"))
+      val expected = Left(Error("Some error"))
 
-      implicit val git = mock[GitCLI]
+      implicit val git: GitCLI = mock[GitCLI]
       (git.clone _ ).expects(repo, cachedRepo).returning(Right(true))
       (git.pull _ ).expects(repo, cachedRepo).returning(Right(true))
       (git.log _ ).expects(repo, cachedRepo, limit).returning(expected)

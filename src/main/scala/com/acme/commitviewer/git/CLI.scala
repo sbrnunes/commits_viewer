@@ -1,6 +1,6 @@
 package com.acme.commitviewer.git
 
-import com.acme.commitviewer.util.Logging
+import com.acme.commitviewer.util.{Error, Logging}
 
 import scala.io.Source
 import scala.sys.process._
@@ -8,7 +8,7 @@ import scala.util.{Failure, Success, Try}
 
 trait CLI extends Logging{
 
-  def exec(commands: String*): Either[Throwable, List[String]] = {
+  def exec(commands: String*): Either[Error, List[String]] = {
     var output = List[String]()
     var errors = List[String]()
 
@@ -22,9 +22,9 @@ trait CLI extends Logging{
       case Success(result) if result == 0 =>
         Right(output.reverse)
       case Success(result) if result != 0 =>
-        Left(new Exception(s"Could not execute '${combine(commands:_*)}'. Errors: $errors"))
-      case Failure(exception) =>
-        Left(exception)
+        Left(Error(s"Could not execute '${combine(commands:_*)}'", errors))
+      case Failure(ex) =>
+        Left(Error(ex.getMessage))
     }
   }
 
