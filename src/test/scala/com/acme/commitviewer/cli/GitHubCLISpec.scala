@@ -27,8 +27,8 @@ class GitHubCLISpec extends FunSpecLike with MockFactory with Matchers {
       (git.pull _ ).expects(repo, cachedRepo).returning(Right(true))
       (git.log _ ).expects(repo, cachedRepo, limit).returning(Right(expected))
 
-      val client = GitHubCLI(repo, cachedReposRoot)
-      client.listCommits(limit) should equal(Right(expected))
+      val client = GitHubCLI(cachedReposRoot)
+      client.listCommits(repo, limit) should equal(Right(expected))
     }
 
     it("should fail if the repo could not be cloned") {
@@ -39,8 +39,8 @@ class GitHubCLISpec extends FunSpecLike with MockFactory with Matchers {
       (git.pull _ ).expects(*, *).never()
       (git.log _ ).expects(*, *, *).never()
 
-      val client = GitHubCLI(repo, cachedReposRoot)
-      client.listCommits(limit) should equal(expected)
+      val client = GitHubCLI(cachedReposRoot)
+      client.listCommits(repo, limit) should equal(expected)
     }
 
     it("should fail if the repo could not be updated") {
@@ -51,8 +51,8 @@ class GitHubCLISpec extends FunSpecLike with MockFactory with Matchers {
       (git.pull _ ).expects(repo, cachedRepo).returning(expected)
       (git.log _ ).expects(*, *, *).never()
 
-      val client = GitHubCLI(repo, cachedReposRoot)
-      client.listCommits(limit) should equal(expected)
+      val client = GitHubCLI(cachedReposRoot)
+      client.listCommits(repo, limit) should equal(expected)
     }
 
     it("should fail if the list of commits could not be retrieved") {
@@ -63,8 +63,8 @@ class GitHubCLISpec extends FunSpecLike with MockFactory with Matchers {
       (git.pull _ ).expects(repo, cachedRepo).returning(Right(true))
       (git.log _ ).expects(repo, cachedRepo, limit).returning(expected)
 
-      val client = GitHubCLI(repo, cachedReposRoot)
-      client.listCommits(limit) should equal(expected)
+      val client = GitHubCLI(cachedReposRoot)
+      client.listCommits(repo, limit) should equal(expected)
     }
   }
 }

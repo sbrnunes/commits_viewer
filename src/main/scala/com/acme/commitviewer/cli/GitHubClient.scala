@@ -8,12 +8,14 @@ import com.acme.commitviewer.util.{Error, Logging, MD5}
 import scala.reflect.io.Directory
 
 trait GitHubClient {
-  def listCommits(limit: Int): Either[Error, List[Commit]]
+  def listCommits(repo: URL, limit: Int): Either[Error, List[Commit]]
 }
 
-class GitHubCLI(repo: URL, cachedRepo: Directory)(implicit git: GitCLI) extends GitHubClient with Logging {
+class GitHubCLI(cachedReposRoot: Directory)(implicit git: GitCLI) extends GitHubClient with Logging {
 
-  def listCommits(limit: Int): Either[Error, List[Commit]] = {
+  def listCommits(repo: URL, limit: Int): Either[Error, List[Commit]] = {
+    val cachedRepo = cachedReposRoot / Directory(MD5.digest(repo.toString))
+
     for {
       _ <- git.clone(repo, cachedRepo)
       _ <- git.pull(repo, cachedRepo)
@@ -23,8 +25,7 @@ class GitHubCLI(repo: URL, cachedRepo: Directory)(implicit git: GitCLI) extends 
 }
 
 object GitHubCLI {
-  def apply(repo: URL, cachedRepos: Directory)(implicit git: GitCLI): GitHubClient = {
-    val cachedRepo = cachedRepos / Directory(MD5.digest(repo.toString))
-    new GitHubCLI(repo, cachedRepo)
+  def apply(cachedReposRoot: Directory)(implicit git: GitCLI): GitHubClient = {
+    new GitHubCLI(cachedReposRoot)
   }
 }
