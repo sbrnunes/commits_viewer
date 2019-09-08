@@ -12,4 +12,10 @@ object Dependencies {
   lazy val typesafeLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 
   lazy val json4s = "org.json4s" %% "json4s-jackson" % "3.6.7"
+
+  lazy val akkaHttp = "com.typesafe.akka" %% "akka-http"   % "10.1.9"
+
+  lazy val akkaStream = "com.typesafe.akka" %% "akka-stream" % "2.5.23"
+
+  lazy val akkaHttpJson4s = "de.heikoseeberger" %% "akka-http-json4s" % "1.27.0"
 }

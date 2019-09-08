@@ -14,6 +14,9 @@ lazy val root = (project in file("."))
       logback,
       typesafeConfig,
       typesafeLogging,
-      json4s
+      json4s,
+      akkaHttp,
+      akkaStream,
+      akkaHttpJson4s
     )
   )
