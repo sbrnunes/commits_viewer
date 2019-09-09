@@ -56,5 +56,5 @@ object GitCLI {
   //TODO: breaks if the subject contains quotes, need to find a workaround
   val CommitFormat = """{ "ref":"%H","author_name":"%an","author_email":"%ae","date":"%at","subject":"%s" }"""
 
-  def apply(implicit cli: CLI): GitCLI = new GitCLI
+  def apply()(implicit cli: CLI): GitCLI = new GitCLI
 }

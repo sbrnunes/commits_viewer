@@ -23,13 +23,13 @@ object CommitViewer extends App with Logging {
     //args(1) -> limit
     //args(2) -> offset
 
+    //TODO: extract args in a more reliable way and handle failures
+
     implicit val cli = CLI
-    implicit val git = GitCLI(cli)
+    implicit val git = GitCLI()
     implicit val api = Github()
 
     val settings = Settings()
-
-    //TODO: extracts args in a more reliable way and handle failures
     val repositoryUrl: URL = new URL(args(0))
     val cliClient = GitHubCLI(settings.cachedReposRoot)
     val apiClient = GitHubApi()

@@ -21,7 +21,13 @@ class GitHubCLISpec extends FunSpecLike with MockFactory with Matchers {
     val offset = 0
 
     it("should use the Git CLI to setup the cached repo and fetch the list of commits") {
-      val expected = List(Commit("ref", "name", "email", Instant.now.toEpochMilli.toString, "subject"))
+      val expected = List(
+        Commit(
+          "ref",
+          author_name = Some("name"),
+          author_email = Some("email"),
+          date = Instant.now.toEpochMilli.toString,
+          subject = "subject"))
 
       implicit val git = mock[GitCLI]
       (git.clone _ ).expects(repo, cachedRepo).returning(Right(true))

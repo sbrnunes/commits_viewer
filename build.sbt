@@ -20,6 +20,7 @@ lazy val root = (project in file("."))
       akkaTestKit,
       akkaStream,
       akkaHttpJson4s,
-      github4s
+      github4s,
+      cats
     )
   )

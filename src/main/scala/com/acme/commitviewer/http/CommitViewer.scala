@@ -1,7 +1,5 @@
 package com.acme.commitviewer.http
 
-import java.net.URL
-
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.javadsl.server.RouteResult
@@ -12,9 +10,10 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.RouteResult.{Complete, Rejected}
 import akka.http.scaladsl.server.directives.LoggingMagnet
 import akka.stream.ActorMaterializer
-import com.acme.commitviewer.cli.{CLI, GitCLI, GitHubCLI, GitHubClient}
+import com.acme.commitviewer.cli.{CLI, GitCLI, GitHubApi, GitHubCLI, GitHubClient}
 import com.acme.commitviewer.config.Settings
 import com.acme.commitviewer.util.Logging
+import github4s.Github
 
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
@@ -25,8 +24,10 @@ object CommitViewer extends App with Logging{
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
   implicit val settings: Settings = Settings()
   implicit val cli: CLI.type = CLI
-  implicit val git: GitCLI = GitCLI(cli)
-  implicit val client: GitHubClient = GitHubCLI(settings.cachedReposRoot)
+  implicit val git: GitCLI = GitCLI()
+  implicit val github: Github = Github(settings.githubApiToken)
+  implicit val githubCli: GitHubCLI = GitHubCLI(settings.cachedReposRoot)
+  implicit val githubApi: GitHubApi = GitHubApi()
 
   def accessLogger(logger: LoggingAdapter)(request: HttpRequest)(result: RouteResult): Unit = {
     result match {

@@ -24,4 +24,6 @@ object Dependencies {
   lazy val akkaHttpJson4s = "de.heikoseeberger" %% "akka-http-json4s" % "1.27.0"
 
   lazy val github4s = "com.47deg" %% "github4s" % "0.20.1"
+
+  lazy val cats = "org.typelevel" %% "cats-core" % "2.0.0-RC1"
 }

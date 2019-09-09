@@ -111,14 +111,21 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
       cachedRepo.createDirectory()
       cachedRepoGit.createDirectory()
 
-      val expected = Commit("ref", "name", "email", now, "subject")
+      val expected = Commit(
+        "ref",
+        author_name = Some("name"),
+        author_email = Some("email"),
+        date = now,
+        subject = "subject"
+      )
 
       implicit val cli = mock[CLI]
       (cli.exec _ )
         .expects(Seq(
           s"cd ${cachedRepo.path}",
           s"""git log --max-count=$limit --skip=$offset --pretty=format:'${GitCLI.CommitFormat}'"""))
-        .returning(Right(List(s"""{ "ref":"${expected.ref}","author_name":"${expected.authorName}","author_email":"${expected.authorEmail}","date":"$now","subject":"${expected.subject}" }""")))
+        .returning(Right(List(
+          s"""{ "ref":"ref","author_name":"name","author_email":"email","date":"$now","subject":"subject" }""")))
 
       val git = new GitCLI
       git.log(repo, cachedRepo, limit, offset) should equal(Right(List(expected)))

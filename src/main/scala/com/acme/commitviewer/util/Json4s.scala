@@ -10,7 +10,7 @@ object Json4s {
   }
 
   def fromJson[T: Manifest](str: String)(implicit formats: Formats = JsonFormats.formats): T = {
-    parse(str).camelizeKeys.extract[T]
+    parse(str).snakizeKeys.extract[T]
   }
 
   def toJson(obj: AnyRef)(implicit formats: Formats = JsonFormats.formats): String = write(obj)

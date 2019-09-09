@@ -5,7 +5,7 @@ import java.time.Instant
 
 import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.acme.commitviewer.cli.GitHubClient
+import com.acme.commitviewer.cli.{GitHubApi, GitHubCLI}
 import com.acme.commitviewer.config.Settings
 import com.acme.commitviewer.model.{Commit, Page}
 import com.acme.commitviewer.util.Error
@@ -29,10 +29,17 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
 
     it("returns a list of commits") {
       implicit val settings: Settings = Settings()
-      val expected = Page(List(Commit("ref", "name", "email", Instant.now.toEpochMilli.toString, "subject")))
-      implicit val client: GitHubClient = mock[GitHubClient]
+      val expected = Page(List(
+        Commit(
+          "ref",
+          author_name = Some("name"),
+          author_email = Some("email"),
+          date = Instant.now.toEpochMilli.toString,
+          subject = "subject")))
+      implicit val api: GitHubApi = mock[GitHubApi]
+      implicit val cli: GitHubCLI = mock[GitHubCLI]
 
-      (client.listCommits _ ).expects(repo, limit, offset).returning(Right(expected))
+      (api.listCommits _ ).expects(repo, limit, offset).returning(Right(expected))
 
       Get(s"/git/commits?repository_url=${repo.toString}&limit=$limit&offset=$offset") ~> GitRoutes() ~> check {
         status should equal(StatusCodes.OK)
@@ -43,10 +50,17 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
 
     it("treats 'limit' as an optional parameter, uses default from settings if missing") {
       implicit val settings: Settings = Settings()
-      val expected = Page(List(Commit("ref", "name", "email", Instant.now.toEpochMilli.toString, "subject")))
-      implicit val client: GitHubClient = mock[GitHubClient]
+      val expected = Page(List(
+        Commit(
+          "ref",
+          author_name = Some("name"),
+          author_email = Some("email"),
+          date = Instant.now.toEpochMilli.toString,
+          subject = "subject")))
+      implicit val api: GitHubApi = mock[GitHubApi]
+      implicit val cli: GitHubCLI = mock[GitHubCLI]
 
-      (client.listCommits _ ).expects(repo, limit, offset).returning(Right(expected))
+      (api.listCommits _ ).expects(repo, limit, offset).returning(Right(expected))
 
       Get(s"/git/commits?repository_url=${repo.toString}") ~> GitRoutes() ~> check {
         status should equal(StatusCodes.OK)
@@ -57,10 +71,17 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
 
     it("treats 'offset' as an optional parameter, uses 0 as default if missing") {
       implicit val settings: Settings = Settings()
-      val expected = Page(List(Commit("ref", "name", "email", Instant.now.toEpochMilli.toString, "subject")))
-      implicit val client: GitHubClient = mock[GitHubClient]
+      val expected = Page(List(
+        Commit(
+          "ref",
+          author_name = Some("name"),
+          author_email = Some("email"),
+          date = Instant.now.toEpochMilli.toString,
+          subject = "subject")))
+      implicit val api: GitHubApi = mock[GitHubApi]
+      implicit val cli: GitHubCLI = mock[GitHubCLI]
 
-      (client.listCommits _ ).expects(repo, limit, offset).returning(Right(expected))
+      (api.listCommits _ ).expects(repo, limit, offset).returning(Right(expected))
 
       Get(s"/git/commits?repository_url=${repo.toString}") ~> GitRoutes() ~> check {
         status should equal(StatusCodes.OK)
@@ -69,12 +90,14 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
       }
     }
 
-    it("returns a 500 - Internal Server Error if the Github client could not fetch the commits") {
+    it("returns a 500 - Internal Server Error if neither the Github API or the Github CLI could fetch the commits") {
       implicit val settings: Settings = Settings()
       val expected = Error("Some error")
-      implicit val client: GitHubClient = mock[GitHubClient]
+      implicit val api: GitHubApi = mock[GitHubApi]
+      implicit val cli: GitHubCLI = mock[GitHubCLI]
 
-      (client.listCommits _ ).expects(repo, limit, offset).returning(Left(expected))
+      (api.listCommits _ ).expects(repo, limit, offset).returning(Left(expected))
+      (cli.listCommits _ ).expects(repo, limit, offset).returning(Left(expected))
 
       Get(s"/git/commits?repository_url=${repo.toString}&limit=10") ~> GitRoutes() ~> check {
         status should equal(StatusCodes.InternalServerError)
@@ -83,13 +106,43 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
       }
     }
 
+    it("returns a 200 if the Github API fails but the Github CLI fallback succeeds") {
+      implicit val settings: Settings = Settings()
+      val expectedError = Error("Some error")
+      val expectedPage = Page(List(
+        Commit(
+          "ref",
+          author_name = Some("name"),
+          author_email = Some("email"),
+          date = Instant.now.toEpochMilli.toString,
+          subject = "subject")))
+      implicit val api: GitHubApi = mock[GitHubApi]
+      implicit val cli: GitHubCLI = mock[GitHubCLI]
+
+      (api.listCommits _ ).expects(repo, limit, offset).returning(Left(expectedError))
+      (cli.listCommits _ ).expects(repo, limit, offset).returning(Right(expectedPage))
+
+      Get(s"/git/commits?repository_url=${repo.toString}&limit=10") ~> GitRoutes() ~> check {
+        status should equal(StatusCodes.OK)
+        contentType should be(ContentTypes.`application/json`)
+        responseAs[Page] should equal(expectedPage)
+      }
+    }
+
     it("returns a 408 - Request Timeout if the requests could not be completed under the configured timeout") {
-      val expected = Page(List(Commit("ref", "name", "email", Instant.now.toEpochMilli.toString, "subject")))
+      val expected = Page(List(
+        Commit(
+          "ref",
+          author_name = Some("name"),
+          author_email = Some("email"),
+          date = Instant.now.toEpochMilli.toString,
+          subject = "subject")))
       val customConfig = ConfigFactory.parseMap(Map("http.requests.timeout" -> "1 millisecond").asJava)
-      implicit val client: GitHubClient = mock[GitHubClient]
+      implicit val api: GitHubApi = mock[GitHubApi]
+      implicit val cli: GitHubCLI = mock[GitHubCLI]
       implicit val settings: Settings = new Settings(customConfig.withFallback(ConfigFactory.load()))
 
-      (client.listCommits _ ).expects(repo, limit, offset).onCall { _ =>
+      (api.listCommits _ ).expects(repo, limit, offset).onCall { _ =>
         Thread.sleep(100)
         Right(expected)
       }
