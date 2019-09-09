@@ -22,4 +22,6 @@ object Dependencies {
   lazy val akkaTestKit = "com.typesafe.akka" %% "akka-testkit" % "2.5.23" % Test
 
   lazy val akkaHttpJson4s = "de.heikoseeberger" %% "akka-http-json4s" % "1.27.0"
+
+  lazy val github4s = "com.47deg" %% "github4s" % "0.20.1"
 }
