@@ -32,6 +32,7 @@ class GitCLI(implicit cli: CLI) extends Logging {
       logger.info(s"Updating ${cachedRepo.path}")
       cli.exec(
         s"cd ${cachedRepo.path}",
+        "git reset --hard origin/master",
         "git pull"
       )
     }

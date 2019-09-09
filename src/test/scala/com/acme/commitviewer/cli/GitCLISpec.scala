@@ -59,7 +59,7 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
 
       implicit val cli: CLI = mock[CLI]
       (cli.exec _ )
-        .expects(Seq(s"cd ${cachedRepo.path}", "git pull"))
+        .expects(Seq(s"cd ${cachedRepo.path}", "git reset --hard origin/master", "git pull"))
         .returning(Right(List.empty))
 
       val git = new GitCLI
@@ -70,7 +70,7 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
       val expected = Left(Error(s"Directory ${cachedRepo.path} is not a valid Git repo."))
 
       implicit val cli: CLI = mock[CLI]
-      (cli.exec _ ).expects(Seq(s"cd ${cachedRepo.path}", "git pull")).never()
+      (cli.exec _ ).expects(Seq(s"cd ${cachedRepo.path}", "git reset --hard origin/master", "git pull")).never()
       val git = new GitCLI
       git.pull(repo, cachedRepo) should equal(expected)
     }
@@ -80,7 +80,7 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
       val expected = Left(Error(s"Directory ${cachedRepo.path} is not a valid Git repo."))
 
       implicit val cli: CLI = mock[CLI]
-      (cli.exec _ ).expects(Seq(s"cd ${cachedRepo.path}", "git pull")).never()
+      (cli.exec _ ).expects(Seq(s"cd ${cachedRepo.path}", "git reset --hard origin/master", "git pull")).never()
       val git = new GitCLI
       git.pull(repo, cachedRepo) should equal(expected)
     }
@@ -92,14 +92,12 @@ class GitCLISpec extends FunSpecLike with MockFactory with Matchers with BeforeA
 
       implicit val cli: CLI = mock[CLI]
       (cli.exec _ )
-        .expects(Seq(s"cd ${cachedRepo.path}", "git pull"))
+        .expects(Seq(s"cd ${cachedRepo.path}", "git reset --hard origin/master", "git pull"))
         .returning(Left(expected))
 
       val git = new GitCLI
       git.pull(repo, cachedRepo) should equal(Left(expected))
     }
-
-    //TODO: ADD TEST FOR EXCEPTIONS
   }
 
   describe("log") {
