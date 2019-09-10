@@ -4,7 +4,7 @@ This tool allows us to list all the commits for a given URL.
 
 ## How-To: Build the application artefact
 
-Requires: SBT and Scala to be installed
+Requires: Git, SBT and Scala to be installed
 
 Before running the application, it needs to be built. This project has been implemented in Scala, and using SBT, so one can use
 the following SBT to build the application artefact:
