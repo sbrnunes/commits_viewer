@@ -10,4 +10,4 @@ case class Commit(
   subject: String
 )
 
-case class Page(commits: List[Commit], nextOffset: Int = 0)
+case class Page(commits: List[Commit], nextPage: Boolean = false)

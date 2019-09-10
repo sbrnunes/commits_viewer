@@ -60,13 +60,13 @@ As soon as it starts, we should see this message in the logs:
 
 Here's an example of a curl request executed against a running application:
 ```
-curl http://localhost:8888/git/commits\?repository_url\=https://github.com/sbrnunes/commits_viewer.git\&limit\=10\&offset\=0 | json_pp
+curl http://localhost:8888/git/commits\?repository_url\=https://github.com/sbrnunes/commits_viewer.git\&limit\=10\&page\=1 | json_pp
 ```
 
 #### Pagination
 
 This API is paginated. By default, the results are fetched with a limit of 10 commits, starting on the most recent commit. By changing
-the HTTP query parameters `limit` and `offset` we can fetch a specific set of commits.
+the HTTP query parameters `limit` and `page` we can fetch a specific set of commits. Pages start at `1`, which is also the default.
 
 #### Github API and CLI fallback
 
@@ -102,7 +102,7 @@ Suggested actions:
 
 ### CLI
 
-There's also the option to run the application as a CLI, passing the `URL`, `limit` and `offset` as arguments:
+There's also the option to run the application as a CLI, passing the `repo`, `limit` and `page` as arguments:
 ```
-$> ./run_cli.sh https://github.com/sbrnunes/commits_viewer.git 10 0
+$> ./run_cli.sh --repo https://github.com/sbrnunes/commits_viewer.git --limit 1 --page 1
 ```

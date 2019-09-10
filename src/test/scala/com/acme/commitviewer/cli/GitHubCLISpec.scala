@@ -15,7 +15,7 @@ class GitHubCLISpec extends fixture.FunSpecLike with MockFactory with Matchers {
   val cachedReposRoot = Directory("cached_repos")
   val cachedRepo = cachedReposRoot / Directory(MD5.digest(repo.toString))
   val limit = 10
-  val offset = 0
+  val page = 5
 
   type FixtureParam = GitCLI
 
@@ -37,10 +37,10 @@ class GitHubCLISpec extends fixture.FunSpecLike with MockFactory with Matchers {
 
       (git.clone _ ).expects(repo, cachedRepo).returning(Right(true))
       (git.pull _ ).expects(repo, cachedRepo).returning(Right(true))
-      (git.log _ ).expects(repo, cachedRepo, limit, offset).returning(Right(expected))
+      (git.log _ ).expects(repo, cachedRepo, limit, limit * (page - 1)).returning(Right(expected))
 
       val client = GitHubCLI(cachedReposRoot)
-      client.listCommits(repo, limit, offset) should equal(Right(Page(expected, nextOffset = 1)))
+      client.listCommits(repo, limit, page) should equal(Right(Page(expected, false)))
     }
 
     it("should fail if the repo could not be cloned") { implicit git: GitCLI =>
@@ -51,7 +51,7 @@ class GitHubCLISpec extends fixture.FunSpecLike with MockFactory with Matchers {
       (git.log _ ).expects(*, *, *, *).never()
 
       val client = GitHubCLI(cachedReposRoot)
-      client.listCommits(repo, limit, offset) should equal(expected)
+      client.listCommits(repo, limit, page) should equal(expected)
     }
 
     it("should fail if the repo could not be updated") { implicit git: GitCLI =>
@@ -62,7 +62,7 @@ class GitHubCLISpec extends fixture.FunSpecLike with MockFactory with Matchers {
       (git.log _ ).expects(*, *, *, *).never()
 
       val client = GitHubCLI(cachedReposRoot)
-      client.listCommits(repo, limit, offset) should equal(expected)
+      client.listCommits(repo, limit, page) should equal(expected)
     }
 
     it("should fail if the list of commits could not be retrieved") { implicit git: GitCLI =>
@@ -70,10 +70,10 @@ class GitHubCLISpec extends fixture.FunSpecLike with MockFactory with Matchers {
 
       (git.clone _ ).expects(repo, cachedRepo).returning(Right(true))
       (git.pull _ ).expects(repo, cachedRepo).returning(Right(true))
-      (git.log _ ).expects(repo, cachedRepo, limit, offset).returning(expected)
+      (git.log _ ).expects(repo, cachedRepo, limit, limit * (page - 1)).returning(expected)
 
       val client = GitHubCLI(cachedReposRoot)
-      client.listCommits(repo, limit, offset) should equal(expected)
+      client.listCommits(repo, limit, page) should equal(expected)
     }
   }
 }

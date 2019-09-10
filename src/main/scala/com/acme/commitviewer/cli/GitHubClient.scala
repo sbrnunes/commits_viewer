@@ -13,20 +13,20 @@ import scalaj.http.HttpResponse
 import scala.reflect.io.Directory
 
 trait GitHubClient {
-  def listCommits(repo: URL, limit: Int, skip: Int): Either[Error, Page]
+  def listCommits(repo: URL, limit: Int, page: Int): Either[Error, Page]
 }
 
 class GitHubCLI(cachedReposRoot: Directory)(implicit git: GitCLI) extends GitHubClient with Logging {
 
-  def listCommits(repo: URL, limit: Int, offset: Int): Either[Error, Page] = {
+  def listCommits(repo: URL, limit: Int, page: Int): Either[Error, Page] = {
     val cachedRepo = LocalRepo.cachedRepoFor(repo, cachedReposRoot)
 
     for {
       _ <- git.clone(repo, cachedRepo)
       _ <- git.pull(repo, cachedRepo)
-      commits <- git.log(repo, cachedRepo, limit, offset)
+      commits <- git.log(repo, cachedRepo, limit, limit * (page - 1))
     } yield {
-      Page(commits, nextOffset = offset + commits.size)
+      Page(commits, nextPage = commits.size >= limit)
     }
   }
 }
@@ -39,10 +39,10 @@ object GitHubCLI {
 
 class GitHubApi(implicit api: Github) extends GitHubClient with Logging {
 
-  def listCommits(repo: URL, limit: Int, offset: Int): Either[Error, Page] = {
+  def listCommits(repo: URL, limit: Int, page: Int): Either[Error, Page] = {
     GitHubApi.extractOwnerAndRepo(repo) match {
       case Some((owner, repo)) =>
-        val listCommits = api.repos.listCommits(owner, repo, pagination = Some(GitHubApi.pageFrom(limit, offset)))
+        val listCommits = api.repos.listCommits(owner, repo, pagination = Some(GitHubApi.pageFrom(limit, page)))
         listCommits.exec[cats.Id, HttpResponse[String]]() match {
           case Left(e) =>
             Left(Error(e.getMessage))
@@ -56,7 +56,7 @@ class GitHubApi(implicit api: Github) extends GitHubClient with Logging {
                 date = commit.date,
                 subject = commit.message)
             }
-            Right(Page(commits, offset + commits.size))
+            Right(Page(commits, nextPage = commits.size >= limit))
         }
       case None =>
         Left(Error("Could not extract Owner and Repo from URL"))
@@ -73,8 +73,8 @@ object GitHubApi {
     }
   }
 
-  def pageFrom(limit: Int, offset: Int): Pagination = {
-    Pagination(page = (offset / limit) + 1, per_page = limit)
+  def pageFrom(limit: Int, page: Int): Pagination = {
+    Pagination(page = page, per_page = limit)
   }
 
   def apply()(implicit api: Github): GitHubApi = {

@@ -23,6 +23,7 @@ lazy val root = (project in file("."))
       akkaStream,
       akkaHttpJson4s,
       github4s,
-      cats
+      cats,
+      scallop
     )
   )

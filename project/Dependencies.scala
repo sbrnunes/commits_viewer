@@ -26,4 +26,6 @@ object Dependencies {
   lazy val github4s = "com.47deg" %% "github4s" % "0.20.1"
 
   lazy val cats = "org.typelevel" %% "cats-core" % "2.0.0-RC1"
+
+  lazy val scallop = "org.rogach" %% "scallop" % "3.3.1"
 }

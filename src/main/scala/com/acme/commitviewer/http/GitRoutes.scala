@@ -25,18 +25,18 @@ object GitRoutes extends Logging {
     implicit val ec: ExecutionContext = system.dispatcher
     path("commits") {
       get {
-        parameters("repository_url".as[String], "limit" ? settings.commitsDefaultLimit, "offset" ? 0) {
-          (repositoryUrl, limit, offset) =>
+        parameters("repository_url".as[String], "limit" ? settings.commitsDefaultLimit, "page" ? 1) {
+          (repositoryUrl, limit, page) =>
             onComplete {
               Future {
                 blocking {
                   val repo = new URL(repositoryUrl) //TODO: Validate the URL and return a 400
-                  api.listCommits(repo, limit, offset)
+                  api.listCommits(repo, limit, page)
                     .recoverWith {
                       case error =>
                         logger.error(s"Could not fetch commits using the GitHub API: ${error.format}")
                         logger.info("Attempting fallback using the CLI...")
-                        cli.listCommits(repo, limit, offset)
+                        cli.listCommits(repo, limit, page)
                     }
                 }
               } withTimeout (settings.requestDefaultTimeout)

@@ -5,11 +5,18 @@ import java.net.URL
 import com.acme.commitviewer.config.Settings
 import com.acme.commitviewer.util.Logging
 import github4s.Github
+import org.rogach.scallop.ScallopConf
 
 import scala.reflect.io.Directory
-import scala.util.Try
 
 object CommitViewer extends App with Logging {
+
+  class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
+    val repo = opt[String]("repo", required = true)
+    val limit = opt[Int]("limit")
+    val page = opt[Int]("page", default = Some(1))
+    verify()
+  }
 
   def cleanCachedRepos(dir: Directory): Unit = {
     if(dir.exists) {
@@ -19,29 +26,26 @@ object CommitViewer extends App with Logging {
   }
 
   override def main(args: Array[String]): Unit = {
-    //args(0) -> repo url
-    //args(1) -> limit
-    //args(2) -> offset
+    val conf = new Conf(args)
 
-    //TODO: extract args in a more reliable way and handle failures
+    val settings = Settings()
 
     implicit val cli = CLI
     implicit val git = GitCLI()
-    implicit val api = Github()
+    implicit val api = Github(settings.githubApiToken)
 
-    val settings = Settings()
-    val repositoryUrl: URL = new URL(args(0))
+    val repositoryUrl: URL = new URL(conf.repo())
     val cliClient = GitHubCLI(settings.cachedReposRoot)
     val apiClient = GitHubApi()
 
-    val limit = Try(args(1).toInt).toOption.getOrElse(settings.commitsDefaultLimit)
-    val offset = Try(args(2).toInt).toOption.getOrElse(0)
+    val limit = conf.limit.toOption.getOrElse(settings.commitsDefaultLimit)
+    val page = conf.page()
 
-    apiClient.listCommits(repositoryUrl, limit, offset) match {
+    apiClient.listCommits(repositoryUrl, limit, page) match {
       case Right(page) => page.commits.foreach(println)
       case Left(ex) =>
         logger.error("Could not list commits for the given repository", ex)
-        cliClient.listCommits(repositoryUrl, limit, offset) match {
+        cliClient.listCommits(repositoryUrl, limit, page) match {
           case Right(page) => page.commits.foreach(println)
           case Left(ex) => logger.error("Could not list commits for the given repository", ex)
         }

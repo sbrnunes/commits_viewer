@@ -25,7 +25,7 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
   describe("getCommits") {
     val repo = new URL("http://some.test.url/repo")
     val limit = 10
-    val offset = 0
+    val page = 1
 
     it("returns a list of commits") {
       implicit val settings: Settings = Settings()
@@ -39,9 +39,9 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
       implicit val api: GitHubApi = mock[GitHubApi]
       implicit val cli: GitHubCLI = mock[GitHubCLI]
 
-      (api.listCommits _ ).expects(repo, limit, offset).returning(Right(expected))
+      (api.listCommits _ ).expects(repo, limit, page).returning(Right(expected))
 
-      Get(s"/git/commits?repository_url=${repo.toString}&limit=$limit&offset=$offset") ~> GitRoutes() ~> check {
+      Get(s"/git/commits?repository_url=${repo.toString}&limit=$limit&page=$page") ~> GitRoutes() ~> check {
         status should equal(StatusCodes.OK)
         contentType should be(ContentTypes.`application/json`)
         responseAs[Page] should equal(expected)
@@ -60,7 +60,7 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
       implicit val api: GitHubApi = mock[GitHubApi]
       implicit val cli: GitHubCLI = mock[GitHubCLI]
 
-      (api.listCommits _ ).expects(repo, limit, offset).returning(Right(expected))
+      (api.listCommits _ ).expects(repo, limit, page).returning(Right(expected))
 
       Get(s"/git/commits?repository_url=${repo.toString}") ~> GitRoutes() ~> check {
         status should equal(StatusCodes.OK)
@@ -69,7 +69,7 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
       }
     }
 
-    it("treats 'offset' as an optional parameter, uses 0 as default if missing") {
+    it("treats 'page' as an optional parameter, uses 0 as default if missing") {
       implicit val settings: Settings = Settings()
       val expected = Page(List(
         Commit(
@@ -81,7 +81,7 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
       implicit val api: GitHubApi = mock[GitHubApi]
       implicit val cli: GitHubCLI = mock[GitHubCLI]
 
-      (api.listCommits _ ).expects(repo, limit, offset).returning(Right(expected))
+      (api.listCommits _ ).expects(repo, limit, page).returning(Right(expected))
 
       Get(s"/git/commits?repository_url=${repo.toString}") ~> GitRoutes() ~> check {
         status should equal(StatusCodes.OK)
@@ -96,8 +96,8 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
       implicit val api: GitHubApi = mock[GitHubApi]
       implicit val cli: GitHubCLI = mock[GitHubCLI]
 
-      (api.listCommits _ ).expects(repo, limit, offset).returning(Left(expected))
-      (cli.listCommits _ ).expects(repo, limit, offset).returning(Left(expected))
+      (api.listCommits _ ).expects(repo, limit, page).returning(Left(expected))
+      (cli.listCommits _ ).expects(repo, limit, page).returning(Left(expected))
 
       Get(s"/git/commits?repository_url=${repo.toString}&limit=10") ~> GitRoutes() ~> check {
         status should equal(StatusCodes.InternalServerError)
@@ -119,8 +119,8 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
       implicit val api: GitHubApi = mock[GitHubApi]
       implicit val cli: GitHubCLI = mock[GitHubCLI]
 
-      (api.listCommits _ ).expects(repo, limit, offset).returning(Left(expectedError))
-      (cli.listCommits _ ).expects(repo, limit, offset).returning(Right(expectedPage))
+      (api.listCommits _ ).expects(repo, limit, page).returning(Left(expectedError))
+      (cli.listCommits _ ).expects(repo, limit, page).returning(Right(expectedPage))
 
       Get(s"/git/commits?repository_url=${repo.toString}&limit=10") ~> GitRoutes() ~> check {
         status should equal(StatusCodes.OK)
@@ -142,7 +142,7 @@ class GitRoutesSpec extends FunSpecLike with ScalatestRouteTest with MockFactory
       implicit val cli: GitHubCLI = mock[GitHubCLI]
       implicit val settings: Settings = new Settings(customConfig.withFallback(ConfigFactory.load()))
 
-      (api.listCommits _ ).expects(repo, limit, offset).onCall { _ =>
+      (api.listCommits _ ).expects(repo, limit, page).onCall { _ =>
         Thread.sleep(100)
         Right(expected)
       }
