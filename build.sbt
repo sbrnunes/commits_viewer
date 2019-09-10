@@ -8,6 +8,8 @@ ThisBuild / organizationName := "acme"
 lazy val root = (project in file("."))
   .settings(
     name := "commits_viewer",
+    test in assembly := {},
+    assemblyOutputPath in assembly := baseDirectory.value / "dist" / "commits-viewer.jar",
     libraryDependencies ++= Seq(
       scalaTest,
       scalaMock,
