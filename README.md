@@ -4,7 +4,7 @@ This tool allows us to list all the commits for a given URL.
 
 ## How-To: Build the application artefact
 
-Requires: Git, SBT and Scala to be installed
+Requires: SBT and Scala to be installed
 
 Before running the application, it needs to be built. This project has been implemented in Scala, and using SBT, so one can use
 the following SBT to build the application artefact:
@@ -14,6 +14,8 @@ $> sbt assembly
 This will generate a fat jar with everything that is needed to run the applicaiton in `dist/commits-viewer.jar`.
 
 ## How-To: Run the application
+
+Requires: Git to be installed (when using the CLI)
 
 ### Configuration
 
@@ -43,6 +45,7 @@ git {
 
   commits.list.default_limit = 10
   commits.list.default_limit = ${?COMMITS_LIST_LIMIT}
+}
 ```
 
 ### HTTP Server
