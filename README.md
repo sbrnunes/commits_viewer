@@ -109,3 +109,5 @@ There's also the option to run the application as a CLI, passing the `repo`, `li
 ```
 $> ./run_cli.sh --repo https://github.com/sbrnunes/commits_viewer.git --limit 1 --page 1
 ```
+
+
